@@ -91,8 +91,6 @@ def saveThePlot(dicData, type, path=""):
     nodesAxis = [i for i in dicData["vertices"]]
     timeAxis = [i for i in dicData["mediasTempo"]]
 
-    print(f"Tempos: {len(timeAxis)}; Vertices: {len(nodesAxis)}")
-
     plt.plot(timeAxis, nodesAxis, label=type)
     plt.xlabel("Médias de tempo em seg.")
     plt.ylabel("#Vértices")
@@ -110,151 +108,151 @@ dicData = {"vertices": n,
            "mediasTempo": [],
            "mediasDensidade": []}
 
-for index, value in enumerate(n):
-    print(f"Geração de grafo com {value} vértices.")
-    process = 1
-    timesElapsed = []
-    densities = []
-    p = 0.1
-
-    for i in range(10):
-        t0 = time.time()
-
-        graph = Gnp(value, p=p)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
-
-        t1 = time.time()
-
-        densities.append(nx.density(graph))
-        timesElapsed.append(t1 - t0)
-        print(f"Grafo {process}/10 gerado.")
-        process += 1
-
-    meanDensities = np.mean(densities)
-    meanTime = np.mean(timesElapsed)
-    print(f"Densidade média de {meanDensities}.")
-    print(f"Tempo médio de {meanTime} segundos.")
-
-    dicData["mediasTempo"].append(meanTime)
-    dicData["mediasDensidade"].append(meanDensities)
-
-saveThePlot(dicData, "Teste individual com P fixo")
-
-dicData.clear()
-dicData = {"vertices": n,
-           "mediasTempo": [],
-           "mediasDensidade": []}
-
-for index, value in enumerate(n):
-    print(f"Geração de grafo com {value} vértices.")
-    process = 1
-    timesElapsed = []
-    densities = []
-    p = 10 / value
-
-    for i in range(10):
-        t0 = time.time()
-
-        graph = Gnp(value, p=p)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
-
-        t1 = time.time()
-
-        densities.append(nx.density(graph))
-        timesElapsed.append(t1 - t0)
-        print(f"Grafo {process}/10 gerado.")
-        process += 1
-
-    meanDensities = np.mean(densities)
-    meanTime = np.mean(timesElapsed)
-    print(f"Densidade média de {meanDensities}.")
-    print(f"Tempo médio de {meanTime} segundos.")
-
-    dicData["mediasTempo"].append(meanTime)
-    dicData["mediasDensidade"].append(meanDensities)
-
-saveThePlot(dicData, "Teste individual com P variável")
-
-dicData.clear()
-dicData = {"vertices": n,
-           "mediasTempo": [],
-           "mediasDensidade": []}
-
-for index, value in enumerate(n):
-    print(f"Geração de grafo com {value} vértices.")
-    process = 1
-    timesElapsed = []
-    densities = []
-    p = 0.1
-
-    for i in range(10):
-        t0 = time.time()
-
-        M = np.random.binomial(value, p)
-        graph = Gnp(value, edges=2 * M)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
-
-        t1 = time.time()
-
-        densities.append(nx.density(graph))
-        timesElapsed.append(t1 - t0)
-        print(f"Grafo {process}/10 gerado.")
-        process += 1
-
-    meanDensities = np.mean(densities)
-    meanTime = np.mean(timesElapsed)
-    print(f"Densidade média de {meanDensities}.")
-    print(f"Tempo médio de {meanTime} segundos.")
-
-    dicData["mediasTempo"].append(meanTime)
-    dicData["mediasDensidade"].append(meanDensities)
-
-saveThePlot(dicData, "Teste sorteando arestas com P fixo e n sendo #nós")
-
-dicData.clear()
-dicData = {"vertices": n,
-           "mediasTempo": [],
-           "mediasDensidade": []}
-
-for index, value in enumerate(n):
-    print(f"Geração de grafo com {value} vértices.")
-    process = 1
-    timesElapsed = []
-    densities = []
-    p = 10 / value
-
-    for i in range(10):
-        t0 = time.time()
-
-        M = np.random.binomial(value, p)
-        graph = Gnp(value, edges=2 * M)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
-
-        t1 = time.time()
-
-        densities.append(nx.density(graph))
-        timesElapsed.append(t1 - t0)
-        print(f"Grafo {process}/10 gerado.")
-        process += 1
-
-    meanDensities = np.mean(densities)
-    meanTime = np.mean(timesElapsed)
-    print(f"Densidade média de {meanDensities}.")
-    print(f"Tempo médio de {meanTime} segundos.")
-
-    dicData["mediasTempo"].append(meanTime)
-    dicData["mediasDensidade"].append(meanDensities)
-
-saveThePlot(dicData, "Teste sorteando arestas com P variável e n sendo #nós")
-
-dicData.clear()
-dicData = {"vertices": n,
-           "mediasTempo": [],
-           "mediasDensidade": []}
+# for index, value in enumerate(n):
+#     print(f"Geração de grafo com {value} vértices.")
+#     process = 1
+#     timesElapsed = []
+#     densities = []
+#     p = 0.1
+#
+#     for i in range(10):
+#         t0 = time.time()
+#
+#         graph = Gnp(value, p=p)
+#         # calculateGraph(graph)
+#         # drawTheGraph(graph)
+#
+#         t1 = time.time()
+#
+#         densities.append(nx.density(graph))
+#         timesElapsed.append(t1 - t0)
+#         print(f"Grafo {process}/10 gerado.")
+#         process += 1
+#
+#     meanDensities = np.mean(densities)
+#     meanTime = np.mean(timesElapsed)
+#     print(f"Densidade média de {meanDensities}.")
+#     print(f"Tempo médio de {meanTime} segundos.")
+#
+#     dicData["mediasTempo"].append(meanTime)
+#     dicData["mediasDensidade"].append(meanDensities)
+#
+# saveThePlot(dicData, "Teste individual com P fixo")
+#
+# dicData.clear()
+# dicData = {"vertices": n,
+#            "mediasTempo": [],
+#            "mediasDensidade": []}
+#
+# for index, value in enumerate(n):
+#     print(f"Geração de grafo com {value} vértices.")
+#     process = 1
+#     timesElapsed = []
+#     densities = []
+#     p = 10 / value
+#
+#     for i in range(10):
+#         t0 = time.time()
+#
+#         graph = Gnp(value, p=p)
+#         # calculateGraph(graph)
+#         # drawTheGraph(graph)
+#
+#         t1 = time.time()
+#
+#         densities.append(nx.density(graph))
+#         timesElapsed.append(t1 - t0)
+#         print(f"Grafo {process}/10 gerado.")
+#         process += 1
+#
+#     meanDensities = np.mean(densities)
+#     meanTime = np.mean(timesElapsed)
+#     print(f"Densidade média de {meanDensities}.")
+#     print(f"Tempo médio de {meanTime} segundos.")
+#
+#     dicData["mediasTempo"].append(meanTime)
+#     dicData["mediasDensidade"].append(meanDensities)
+#
+# saveThePlot(dicData, "Teste individual com P variável")
+#
+# dicData.clear()
+# dicData = {"vertices": n,
+#            "mediasTempo": [],
+#            "mediasDensidade": []}
+#
+# for index, value in enumerate(n):
+#     print(f"Geração de grafo com {value} vértices.")
+#     process = 1
+#     timesElapsed = []
+#     densities = []
+#     p = 0.1
+#
+#     for i in range(10):
+#         t0 = time.time()
+#
+#         M = np.random.binomial(value, p)
+#         graph = Gnp(value, edges=2 * M)
+#         # calculateGraph(graph)
+#         # drawTheGraph(graph)
+#
+#         t1 = time.time()
+#
+#         densities.append(nx.density(graph))
+#         timesElapsed.append(t1 - t0)
+#         print(f"Grafo {process}/10 gerado.")
+#         process += 1
+#
+#     meanDensities = np.mean(densities)
+#     meanTime = np.mean(timesElapsed)
+#     print(f"Densidade média de {meanDensities}.")
+#     print(f"Tempo médio de {meanTime} segundos.")
+#
+#     dicData["mediasTempo"].append(meanTime)
+#     dicData["mediasDensidade"].append(meanDensities)
+#
+# saveThePlot(dicData, "Teste sorteando arestas com P fixo e n sendo #nós")
+#
+# dicData.clear()
+# dicData = {"vertices": n,
+#            "mediasTempo": [],
+#            "mediasDensidade": []}
+#
+# for index, value in enumerate(n):
+#     print(f"Geração de grafo com {value} vértices.")
+#     process = 1
+#     timesElapsed = []
+#     densities = []
+#     p = 10 / value
+#
+#     for i in range(10):
+#         t0 = time.time()
+#
+#         M = np.random.binomial(value, p)
+#         graph = Gnp(value, edges=2 * M)
+#         # calculateGraph(graph)
+#         # drawTheGraph(graph)
+#
+#         t1 = time.time()
+#
+#         densities.append(nx.density(graph))
+#         timesElapsed.append(t1 - t0)
+#         print(f"Grafo {process}/10 gerado.")
+#         process += 1
+#
+#     meanDensities = np.mean(densities)
+#     meanTime = np.mean(timesElapsed)
+#     print(f"Densidade média de {meanDensities}.")
+#     print(f"Tempo médio de {meanTime} segundos.")
+#
+#     dicData["mediasTempo"].append(meanTime)
+#     dicData["mediasDensidade"].append(meanDensities)
+#
+# saveThePlot(dicData, "Teste sorteando arestas com P variável e n sendo #nós")
+#
+# dicData.clear()
+# dicData = {"vertices": n,
+#            "mediasTempo": [],
+#            "mediasDensidade": []}
 
 for index, value in enumerate(n):
     print(f"Geração de grafo com {value} vértices.")
@@ -269,8 +267,8 @@ for index, value in enumerate(n):
         maxEdges = int(len([i for i in comb(range(value),2)])/2)
         M = np.random.binomial(maxEdges, p)
         graph = Gnp(value, edges=2 * M)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
+        calculateGraph(graph)
+        drawTheGraph(graph)
 
         t1 = time.time()
 
@@ -307,8 +305,8 @@ for index, value in enumerate(n):
         maxEdges = int(len([i for i in comb(range(value), 2)]) / 2)
         M = np.random.binomial(maxEdges, p)
         graph = Gnp(value, edges=2 * M)
-        # calculateGraph(graph)
-        # drawTheGraph(graph)
+        calculateGraph(graph)
+        drawTheGraph(graph)
 
         t1 = time.time()
 
@@ -327,6 +325,6 @@ for index, value in enumerate(n):
 
 saveThePlot(dicData, "Teste sorteando arestas com P variável e n sendo #máximo de arestas")
 
-plt.legend(loc="lower right", shadow=True)
-plt.savefig("D:\\Documentos\\UNIRIO\\5º Período\\Introdução à Ciência de Redes\\Plots\\PlotModelos")
-plt.show()
+# plt.legend(loc="lower right", shadow=True)
+# plt.savefig("D:\\Documentos\\UNIRIO\\5º Período\\Introdução à Ciência de Redes\\Plots\\PlotModelos")
+# plt.show()
