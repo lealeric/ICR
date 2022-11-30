@@ -21,7 +21,7 @@ class Dado:
 
         # Criando cópia do dataframe para utilizar no loop
         temp = pontos2.copy()
-        analise = pd.DataFrame(columns=['Dis No', 'Year', 'Neighbors'])
+        self.dfSaida = pd.DataFrame(columns=['Dis No', 'Year', 'Neighbors'])
 
         with IncrementalBar('Gerando o Dataframe de viznhos', max=len(temp)) as bar:
             # Iterando as linhas dos dataframes
@@ -40,12 +40,10 @@ class Dado:
 
                     if rT['Country'] == r['Country']: # Ignorando caso os dados estejam em países diferentes
                         continue
-                    analise = analise.append({'Dis No': r['Dis No'], 'Year': r['Year'], 'Neighbors': rT['Dis No']},
+                    self.dfSaida = self.dfSaida.append({'Dis No': r['Dis No'], 'Year': r['Year'], 'Neighbors': rT['Dis No']},
                                              ignore_index=True)
                 bar.next()
             bar.finish()
-
-        self.dfSaida.head()
 
         self.dfSaida.to_csv(os.getcwd() + "\Datasets\ListaVizinhos1995_2000.csv")
 
