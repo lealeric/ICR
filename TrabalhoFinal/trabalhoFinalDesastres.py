@@ -1,44 +1,43 @@
 import os
-from datetime import datetime
-
 import pandas as pd
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
+from datetime import datetime
 from progress.bar import IncrementalBar
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 class Dado:
-    def __init__(self, pontos, ):
-        self.pontos = pontos
+    def __init__(self, pontos):
+        self.pontos = pontos  #Caminho do arquivo com os pontos de desastres
         self.dfSaida = None
 
     def retornaDataFrameVizinhos(self):
-        pontos2 = pd.read_excel(self.pontos)
+        dfDados = pd.read_excel(self.pontos)
 
         # Criando cópia do dataframe para utilizar no loop
-        temp = pontos2.copy()
+        temp = dfDados.copy()
         self.dfSaida = pd.DataFrame(columns=['Dis No', 'Year', 'Neighbors'])
 
         with IncrementalBar('Gerando o Dataframe de viznhos', max=len(temp)) as bar:
             # Iterando as linhas dos dataframes
-            for ix, r in pontos2.iterrows():
+            for ix, r in dfDados.iterrows():
                 for ixT, rT in temp.iterrows():
-                    if r['Dis No'] == rT['Dis No']: #Ignorando caso os dados tenham o mesmo código identificador
+                    if r['Dis No'] == rT['Dis No']:
                         continue
 
-                    if r['Disaster Type'] != rT['Disaster Type']:  # ignorando caso os dados sejam de tipos de desastre diferentes
+                    if rT['Disaster Type'] not in r['Related To']:
                         continue
 
-                    date1 = datetime(int(r['Year']), int(r['Start Month']), 1)
-                    date2 = datetime(int(rT['Year']), int(rT['Start Month']), 1)
-                    if abs((date1.year - date2.year) * 12 + date1.month - date2.month) > 2: # Restrigindo a busca para uma diferença de 2 meses no máximo
+                    date1 = datetime.datetime(int(r['Year']), int(r['Start Month']), 1)
+                    date2 = datetime.datetime(int(rT['Year']), int(rT['Start Month']), 1)
+                    if abs((date1.year - date2.year) * 12 + date1.month - date2.month) > 3:
                         continue
 
-                    if rT['Country'] == r['Country']: # Ignorando caso os dados estejam em países diferentes
+                    if rT['Region'] != r['Region']:
                         continue
                     self.dfSaida = self.dfSaida.append({'Dis No': r['Dis No'], 'Year': r['Year'], 'Neighbors': rT['Dis No']},
                                              ignore_index=True)
@@ -125,7 +124,7 @@ if __name__ == '__main__':
 
     dfDados.to_csv(os.getcwd() + "\\Datasets\\ListaVizinhos.csv")
 
-    #dfDados = pd.read_csv(os.getcwd() + "\Datasets\ListaVizinhos300km_1995_2000.csv") #Utilizar esse caso passe um arquivo com os dados para o grafo
+    # dfDados = pd.read_csv("D:\\Documentos\\UNIRIO\\5º Período\\Introdução à Ciência de Redes\\Datasets\\CSV\\ListaVizinhos300km_1995_2000.csv") #Utilizar esse caso passe um arquivo com os dados para o grafo
 
     grafo = Grafo(dfDados)
 
