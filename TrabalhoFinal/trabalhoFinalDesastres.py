@@ -1,4 +1,5 @@
 import os
+import math
 import pandas as pd
 import networkx as nx
 import numpy as np
@@ -20,31 +21,38 @@ class Dado:
 
         # Criando cópia do dataframe para utilizar no loop
         temp = dfDados.copy()
-        self.dfSaida = pd.DataFrame(columns=['Dis No', 'Year', 'Neighbors'])
+        self.dfSaida = pd.DataFrame(columns=['Dis No', 'Year', 'Neighbors', 'Total Deaths'])
 
         with IncrementalBar('Gerando o Dataframe de viznhos', max=len(temp)) as bar:
             # Iterando as linhas dos dataframes
             for ix, r in dfDados.iterrows():
+                if r['Total Deaths'] == "" or r['Start Month'] == "" or math.isnan(r['Start Month']):
+                    continue
+
                 for ixT, rT in temp.iterrows():
+                    if rT['Total Deaths'] == "" or rT['Start Month'] == "" or math.isnan(rT['Start Month']):
+                        continue
+
                     if r['Dis No'] == rT['Dis No']:
                         continue
 
-                    if rT['Disaster Type'] not in r['Related To']:
+                    if rT['Disaster Type'] != r['Disaster Type']:
                         continue
 
-                    date1 = datetime.datetime(int(r['Year']), int(r['Start Month']), 1)
-                    date2 = datetime.datetime(int(rT['Year']), int(rT['Start Month']), 1)
+                    date1 = datetime(int(r['Year']), int(r['Start Month']), 1)
+                    date2 = datetime(int(rT['Year']), int(rT['Start Month']), 1)
                     if abs((date1.year - date2.year) * 12 + date1.month - date2.month) > 3:
                         continue
 
-                    if rT['Region'] != r['Region']:
+                    if rT['Country'] != r['Country']:
                         continue
-                    self.dfSaida = self.dfSaida.append({'Dis No': r['Dis No'], 'Year': r['Year'], 'Neighbors': rT['Dis No']},
+
+                    self.dfSaida = self.dfSaida.append({'Dis No': r['Dis No'], 'Year': r['Year'], 'Neighbors': rT['Dis No'], 'Total Deaths': rT['Total Deaths']},
                                              ignore_index=True)
                 bar.next()
             bar.finish()
 
-        self.dfSaida.to_csv(os.getcwd() + "\Datasets\ListaVizinhos1995_2000.csv")
+        self.dfSaida.to_csv(os.getcwd() + "\Datasets\ListaVizinhos2015_2019.csv")
 
         return self.dfSaida
 
@@ -113,7 +121,7 @@ class Grafo:
 
 
 if __name__ == '__main__':
-    arqPontos = os.getcwd() + "\\NaturalDisasters.xlsx"
+    arqPontos = os.getcwd() + "\\NaturalDisasters_2015-2019.xlsx"
     print(arqPontos)
 
     dado = Dado(arqPontos)
