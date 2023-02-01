@@ -9,6 +9,7 @@ from re import search
 from dotenv import load_dotenv
 from datetime import datetime
 from progress.bar import IncrementalBar
+from typing import List, Dict, Tuple, Union
 
 import warnings 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -42,7 +43,7 @@ class Dado:
 
         worksTogether = {}
 
-        for movie in person1Movies['cast']:
+        for movie in (person1Movies['cast'] + person1Movies['crew']) :
             if movie['release_date'][:4] != str(year):
                 continue
             movieTitle = tmdb.Movies(movie['id']).info()['title']
@@ -60,32 +61,32 @@ class Dado:
                 if movie['id'] == movie2Crew['id'] and movie['id'] not in worksTogether.keys():
                     worksTogether[movie['id']] = [movieTitle, movie['release_date'][:4]]
 
-        for movie in person1Movies['crew']:
-            if movie['release_date'][:4] != str(year):
-                continue
-            movieTitle = tmdb.Movies(movie['id']).info()['title']
-            for movie2Cast in person2Movies['cast']:
-                if movie2Cast['release_date'][:4] != str(year):
-                    continue
-                if movie['id'] == movie2Cast['id'] and movie['id'] not in worksTogether.keys():
-                    worksTogether[movie['id']] = [movieTitle, movie['release_date'][:4]]
+        # for movie in person1Movies['crew']:
+        #     if movie['release_date'][:4] != str(year):
+        #         continue
+        #     movieTitle = tmdb.Movies(movie['id']).info()['title']
+        #     for movie2Cast in person2Movies['cast']:
+        #         if movie2Cast['release_date'][:4] != str(year):
+        #             continue
+        #         if movie['id'] == movie2Cast['id'] and movie['id'] not in worksTogether.keys():
+        #             worksTogether[movie['id']] = [movieTitle, movie['release_date'][:4]]
 
-            for movie2Crew in person2Movies['crew']:
-                if movie2Crew['release_date'][:4] != str(year):
-                    continue
-                if movie['id'] == movie2Crew['id'] and movie['id'] not in worksTogether.keys():
-                    worksTogether[movie['id']] = [movieTitle, movie['release_date'][:4]]
+        #     for movie2Crew in person2Movies['crew']:
+        #         if movie2Crew['release_date'][:4] != str(year):
+        #             continue
+        #         if movie['id'] == movie2Crew['id'] and movie['id'] not in worksTogether.keys():
+        #             worksTogether[movie['id']] = [movieTitle, movie['release_date'][:4]]
 
         return worksTogether
 class Grafo:
-    def __init__(self, dados, grafo = None):
+    def __init__(self, dados = None, grafo = None):
         self.dados = dados
         self.grafo = grafo
         self.dado = Dado(self.dados)
 
         if grafo is None:
             self.grafo = nx.Graph()
-            self.criarGrafo()
+            # self.criarGrafo()
 
     def criarGrafo(self):
         self.grafo.add_nodes_from(self.dados['name'])
@@ -109,6 +110,49 @@ class Grafo:
                     continue
         
         self.drawTheGraph()
+
+    def criaNos(self, datasetAno):
+        for index, row in datasetAno.iterrows():
+            if not self.grafo.has_node(row['name']):
+                self.grafo.add_node(row['name'])
+                attrs = {row['name']: {"oscarWinner": row['winner']}}
+                nx.set_node_attributes(self.grafo, attrs)
+
+        print("Nós criados com sucesso")
+        print("O grafo possui {} nós".format((self.grafo.number_of_nodes())))
+
+    def populaGrafo(self, year): 
+        for node in self.grafo.nodes():
+            for node2 in self.grafo.nodes():
+                if node == node2:
+                    continue
+
+                if self.grafo.has_edge(node, node2):
+                    continue
+
+                # print("Procurando filmes em comum entre {} e {} no ano de {}".format(node, node2, year))
+                try:
+                    if len(self.dado.getFilmes(node, node2, year)) > 0:
+                        self.grafo.add_edge(node, node2)
+                        # print("Adicionado com sucesso")
+                except Exception as e:
+                    print(e)
+                    print("Erro ao adicionar aresta entre {} e {}".format(node, node2))
+                    continue
+
+    def calculateGraph(self):
+        degrees = []
+
+        for node in self.grafo.nodes():
+            degrees.append(nx.degree(self.grafo, node))
+
+        print(f"Nº de nós: {self.grafo.number_of_nodes()}")
+        print(f"Nº de links: {self.grafo.number_of_edges()}")
+        print(f"Grau médio: {np.mean(degrees)}")
+        print(f"Densidade: {nx.density(self.grafo)}")
+        # print(f"Distância média: {nx.average_shortest_path_length(G)}")
+        print(f"Cluster global: {nx.transitivity(self.grafo)}")
+        print(f"Cluster médio: {nx.average_clustering(self.grafo)}")
 
     def drawTheGraph(self):
         fig = plt.figure(figsize=(10, 10))
@@ -143,8 +187,10 @@ if __name__ == '__main__':
     data = pd.read_csv(os.getcwd() + '\\TrabalhoFinal\\Datasets\\oscar_dataset\\the_oscar_award.csv', encoding='utf-8')
     print(data.shape[0])
 
+    grafo = Grafo()
+
     for index, row in data.iterrows():
-        if row['year_ceremony'] < 2022:
+        if row['year_ceremony'] < 2021:
             data.drop(index, inplace=True)
             continue
             
@@ -153,9 +199,29 @@ if __name__ == '__main__':
         else:
             data.drop(index, inplace=True)
 
-    # print(data.shape[0])
-    print(data.head(10))
-    # d = Dado()
-    # print(d.getFilmes())
+    firstYear = 2020
+    yearchecked = False
 
-    g = Grafo(data)
+    for index, row in data.iterrows():
+        if row['year_film'] != firstYear:
+            print(row['year_film'])
+            
+            grafo.drawTheGraph()
+            yearchecked = False
+            firstYear = row['year_film']
+
+        if yearchecked:
+            continue
+
+        print(firstYear)
+        df = data[data["year_film"] == firstYear]
+        grafo.criaNos(df)
+        grafo.populaGrafo(firstYear) 
+        grafo.calculateGraph()
+        yearchecked = True
+
+
+    grafo.drawTheGraph()
+    
+
+    
