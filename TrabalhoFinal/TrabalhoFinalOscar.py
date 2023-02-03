@@ -16,7 +16,7 @@ from progress.bar import IncrementalBar
 import warnings 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# # # INSTALAR KALEIDO PELO PIP # # #
+# # # INSTALAR kaleido E python-louvain PELO PIP # # #
 
 load_dotenv()
 tmdb.API_KEY = os.getenv('MOVIEDB_KEY')
