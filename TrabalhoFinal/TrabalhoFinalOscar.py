@@ -1,3 +1,4 @@
+import requests
 import os
 import traceback
 import winsound
@@ -11,7 +12,7 @@ import plotly.graph_objects as go
 from re import search
 from dotenv import load_dotenv
 from community import community_louvain
-from progress.bar import IncrementalBar
+# from progress.bar import IncrementalBar
 
 import warnings 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -48,96 +49,139 @@ class Dado:
             or pessoa1 in self.notWorksTogether.keys() and pessoa2 in self.notWorksTogether[pessoa1]
             or pessoa2 in self.notWorksTogether.keys() and pessoa1 in self.notWorksTogether[pessoa2]):
             # print("Análise feita entre {} e {}".format(pessoa1, pessoa2))
+            return       
+
+        try:
+            # person1 = tmdb.People(searchTMDB.person(query=pessoa1)['results'][0]['id'])
+            # person2 = tmdb.People(searchTMDB.person(query=pessoa2)['results'][0]['id'])
+            person1 = searchTMDB.person(query=pessoa1)['results'][0]['id']
+            person2 = searchTMDB.person(query=pessoa2)['results'][0]['id']
+        except Exception as e:
+            print(e)
+            print("Erro ao buscar pessoas")
             return
 
-        person1 = tmdb.People(searchTMDB.person(query=pessoa1)['results'][0]['id'])
-        person2 = tmdb.People(searchTMDB.person(query=pessoa2)['results'][0]['id'])
+        if pessoa1 not in self.worksTogether.keys():
+            self.worksTogether[pessoa1] = {}
 
-        person1Movies = person1.movie_credits()
-        person2Movies = person2.movie_credits()
+        if pessoa1 not in self.notWorksTogether.keys():
+            self.notWorksTogether[pessoa1] = []
 
-        for movie in (person1Movies['cast']):
-            if pessoa1 not in self.worksTogether.keys():
-                self.worksTogether[pessoa1] = {}
-                
-            if pessoa1 not in self.notWorksTogether.keys():
-                self.notWorksTogether[pessoa1] = []
-            
+        # Get requistions from a httprequest as json
+        url = "https://api.themoviedb.org/3/discover/movie"
+        params = {
+            "api_key": tmdb.API_KEY,
+            "sort_by": "release_date.asc",
+            "with_people": "{},{}".format(person1, person2)
+        }
 
-            for movie2Cast in person2Movies['cast']:
-                if movie['id'] == movie2Cast['id']:
-                    if pessoa2 not in self.worksTogether[pessoa1].keys():
-                        self.worksTogether[pessoa1][pessoa2] = []
+        discover = requests.get(url, params=params).json()
 
+        if not discover['results']:
+            self.notWorksTogether[pessoa1].append(pessoa2)
+            # print("Não há filmes em comum entre {} e {}".format(pessoa1, pessoa2))
+
+        else:
+            for movie in discover['results']:
+                if pessoa2 not in self.worksTogether[pessoa1].keys():
+                    self.worksTogether[pessoa1][pessoa2] = []
+
+                try:
                     releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
                     if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
-                        movieTitle = tmdb.Movies(movie['id']).info()['title']
+                        # movieTitle = tmdb.Movies(movie['id']).info()['title']
                         self.worksTogether[pessoa1][pessoa2].append(releaseYear)
                         # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
+                except KeyError as keyError:
+                    print(keyError)
+                    print("Erro ao buscar filme")
+                    continue
 
-                else:
-                    self.notWorksTogether[pessoa1].append(pessoa2)
+        # person1Movies = person1.movie_credits()
+        # person2Movies = person2.movie_credits()
 
-            for movie2Crew in person2Movies['crew']:
+        # for movie in (person1Movies['cast']):
+        #     if pessoa1 not in self.worksTogether.keys():
+        #         self.worksTogether[pessoa1] = {}
                 
-                if movie['id'] == movie2Crew['id']:
-                    if pessoa2 not in self.worksTogether[pessoa1].keys():
-                        self.worksTogether[pessoa1][pessoa2] = []
-
-                        releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
-                        if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
-                            movieTitle = tmdb.Movies(movie['id']).info()['title']
-                            self.worksTogether[pessoa1][pessoa2].append(releaseYear)
-                            # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
-                    
-                else:
-                    self.notWorksTogether[pessoa1].append(pessoa2)
-
-        for movie in (person1Movies['crew']):
-            if pessoa1 not in self.worksTogether.keys():
-                self.worksTogether[pessoa1] = {}
-                
-            if pessoa1 not in self.notWorksTogether.keys():
-                self.notWorksTogether[pessoa1] = []
+        #     if pessoa1 not in self.notWorksTogether.keys():
+        #         self.notWorksTogether[pessoa1] = []
             
-            # movieTitle = tmdb.Movies(movie['id']).info()['title']
 
-            for movie2Cast in person2Movies['cast']:
-                if movie['id'] == movie2Cast['id']:
-                    if pessoa2 not in self.worksTogether[pessoa1].keys():
-                        self.worksTogether[pessoa1][pessoa2] = []
+        #     for movie2Cast in person2Movies['cast']:
+        #         if movie['id'] == movie2Cast['id']:
+        #             if pessoa2 not in self.worksTogether[pessoa1].keys():
+        #                 self.worksTogether[pessoa1][pessoa2] = []
 
-                    releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
-                    if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
-                        movieTitle = tmdb.Movies(movie['id']).info()['title']
-                        self.worksTogether[pessoa1][pessoa2].append(releaseYear)
-                        # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
+        #             releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
+        #             if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
+        #                 movieTitle = tmdb.Movies(movie['id']).info()['title']
+        #                 self.worksTogether[pessoa1][pessoa2].append(releaseYear)
+        #                 # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
 
-                else:
-                    self.notWorksTogether[pessoa1].append(pessoa2)
+        #         else:
+        #             self.notWorksTogether[pessoa1].append(pessoa2)
 
-            for movie2Crew in person2Movies['crew']:
+        #     for movie2Crew in person2Movies['crew']:
                 
-                if movie['id'] == movie2Crew['id']:
-                    if pessoa2 not in self.worksTogether[pessoa1].keys():
-                        self.worksTogether[pessoa1][pessoa2] = []
+        #         if movie['id'] == movie2Crew['id']:
+        #             if pessoa2 not in self.worksTogether[pessoa1].keys():
+        #                 self.worksTogether[pessoa1][pessoa2] = []
 
-                        releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
-                        if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
-                            movieTitle = tmdb.Movies(movie['id']).info()['title']
-                            self.worksTogether[pessoa1][pessoa2].append(releaseYear)
-                            # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
+        #                 releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
+        #                 if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
+        #                     movieTitle = tmdb.Movies(movie['id']).info()['title']
+        #                     self.worksTogether[pessoa1][pessoa2].append(releaseYear)
+        #                     # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
                     
-                else:
-                    self.notWorksTogether[pessoa1].append(pessoa2)
+        #         else:
+        #             self.notWorksTogether[pessoa1].append(pessoa2)
+
+        # for movie in (person1Movies['crew']):
+            # if pessoa1 not in self.worksTogether.keys():
+            #     self.worksTogether[pessoa1] = {}
+                
+            # if pessoa1 not in self.notWorksTogether.keys():
+            #     self.notWorksTogether[pessoa1] = []
+            
+            # # movieTitle = tmdb.Movies(movie['id']).info()['title']
+
+            # for movie2Cast in person2Movies['cast']:
+            #     if movie['id'] == movie2Cast['id']:
+            #         if pessoa2 not in self.worksTogether[pessoa1].keys():
+            #             self.worksTogether[pessoa1][pessoa2] = []
+
+            #         releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
+            #         if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
+            #             movieTitle = tmdb.Movies(movie['id']).info()['title']
+            #             self.worksTogether[pessoa1][pessoa2].append(releaseYear)
+            #             # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
+
+            #     else:
+            #         self.notWorksTogether[pessoa1].append(pessoa2)
+
+            # for movie2Crew in person2Movies['crew']:
+                
+            #     if movie['id'] == movie2Crew['id']:
+            #         if pessoa2 not in self.worksTogether[pessoa1].keys():
+            #             self.worksTogether[pessoa1][pessoa2] = []
+
+            #             releaseYear = int(movie['release_date'][:4]) if movie['release_date'][:4] != "" else 0
+            #             if releaseYear not in self.worksTogether[pessoa1][pessoa2] and releaseYear != 0:
+            #                 movieTitle = tmdb.Movies(movie['id']).info()['title']
+            #                 self.worksTogether[pessoa1][pessoa2].append(releaseYear)
+            #                 # print("{} e {} trabalharam juntos em {} em {}".format(pessoa1, pessoa2, movieTitle, releaseYear))
+                    
+            #     else:
+            #         self.notWorksTogether[pessoa1].append(pessoa2)
 
     def generateMetricas(self, dicMetricas):
         self.metricas = pd.DataFrame.from_dict(dicMetricas)
 
         self.metricas.to_csv(os.getcwd() + '\\TrabalhoFinal\\Grafos\\Métricas por ano.csv')
         
-    def exportGraphToCSV(self, grafo):
-        nx.write_edgelist(grafo, os.getcwd() + '\\TrabalhoFinal\\Grafos\\Grafo.csv', delimiter=',', data=False)
+    def exportGraphToCSV(self, grafo, year):
+        nx.write_edgelist(grafo, os.getcwd() + '\\TrabalhoFinal\\Grafos\\Grafo' + str(year) + '.csv', delimiter=',', data=False)
     
 class Grafo:
     def __init__(self, dados = None, grafo = None):
@@ -247,14 +291,14 @@ class Grafo:
         print(f"Grau médio: {np.mean(degrees)}")
         print(f"Densidade: {nx.density(self.grafo)}")
         # print(f"Distância média: {nx.average_shortest_path_length(G)}")
-        print(f"Cluster global: {nx.transitivity(self.grafo)}")
-        print(f"Cluster médio: {nx.average_clustering(self.grafo)}")
-        print(f'Coeficiente de assortatividade geral: {nx.degree_assortativity_coefficient(self.grafo)}')
-        print(f'Coeficiente de assortatividade por vencedores do oscar: {nx.attribute_assortativity_coefficient(self.grafo, "oscarWinner")}')
+        # print(f"Cluster global: {nx.transitivity(self.grafo)}")
+        # print(f"Cluster médio: {nx.average_clustering(self.grafo)}")
+        # print(f'Coeficiente de assortatividade geral: {nx.degree_assortativity_coefficient(self.grafo)}')
+        # print(f'Coeficiente de assortatividade por vencedores do oscar: {nx.attribute_assortativity_coefficient(self.grafo, "oscarWinner")}')
 
-        print(f'Coeficiente de centralidade de grau: {nx.degree_centrality(self.grafo)}')
-        print(f'Coeficiente de centralidade de proximidade: {nx.closeness_centrality(self.grafo)}')
-        print(f'Coeficiente de centralidade de betweeness: {nx.betweenness_centrality(self.grafo)}')
+        # print(f'Coeficiente de centralidade de grau: {nx.degree_centrality(self.grafo)}')
+        # print(f'Coeficiente de centralidade de proximidade: {nx.closeness_centrality(self.grafo)}')
+        # print(f'Coeficiente de centralidade de betweeness: {nx.betweenness_centrality(self.grafo)}')
 
         self.metricasGrafo["ano"].append(year)
         self.metricasGrafo["numeroDeNos"].append(self.grafo.number_of_nodes())
@@ -350,9 +394,9 @@ class Grafo:
                 reversescale=True,
                 symbol = [17 if nx.get_node_attributes(self.grafo, "oscarWinner")[v] else 0  for v in self.grafo.nodes()],
                 color=[],
-                size= [10 + (5 * nx.get_node_attributes(self.grafo, "oscars")[v]) for v in self.grafo.nodes()],
+                size= [10 + (10 * nx.get_node_attributes(self.grafo, "oscars")[v]) for v in self.grafo.nodes()],
                 colorbar=dict(
-                    thickness=15,
+                    thickness=15,   
                     title='Graus',
                     xanchor='left',
                     titleside='right'
@@ -483,7 +527,7 @@ if __name__ == '__main__':
 
     dfOscarBase = pd.read_csv(os.getcwd() + '\\TrabalhoFinal\\Datasets\\oscar_dataset\\the_oscar_award.csv', encoding='utf-8')
     for index, row in dfOscarBase.iterrows():
-        if row['year_ceremony'] < 2016:
+        if row['year_ceremony'] < 2020:
             dfOscarBase.drop(index, inplace=True)
             continue
             
@@ -493,52 +537,60 @@ if __name__ == '__main__':
             dfOscarBase.drop(index, inplace=True)
 
     d = Dado(dfOscarBase)
-    contador = 1
+    contador, contador2 = 1
     for index, row in dfOscarBase.iterrows():
         print("Analisando {} de {}".format(contador, dfOscarBase.shape[0]))
         for index2, row2 in dfOscarBase.iterrows():
+            print("Analisando {} de {}".format(contador2, dfOscarBase.shape[0]))
             if index == index2 or row['name'] == row2['name']:
                 continue
-            
-            d.getFilmes(row['name'], row2['name'])   
+            try:
+                d.getFilmes(row['name'], row2['name'])
+            except Exception as e:
+                print(e)
+                continue
+            contador2 += 1
         contador += 1
 
-    for key, value in d.worksTogether.items():
-        print(key, value)
+    # for key, value in d.worksTogether.items():
+    #     print(key, value)
 
-    currentYear = 2015
+    currentYear = 2020
     yearchecked = False
 
+    
     grafo = Grafo(dados=d.worksTogether)
     for index, row in dfOscarBase.iterrows():
-        if row['year_film'] != currentYear:
-            print(row['year_film'])    
+        if row['year_ceremony'] != currentYear:
+            print(row['year_ceremony'])    
             yearchecked = False
-            currentYear = row['year_film']
+            currentYear = row['year_ceremony']
 
         if yearchecked:
             continue
 
         print(currentYear)
-        df = dfOscarBase[dfOscarBase["year_film"] == currentYear]
+        df = dfOscarBase[dfOscarBase["year_ceremony"] == currentYear]
         grafo.addNodes(df)
         grafo.populateGraph(int(currentYear))
         grafo.calculateGraph(int(currentYear))
         grafo.drawTheGraphPlotly(int(currentYear))
         try:
-            d.exportGraphToCSV(grafo)
+            d.exportGraphToCSV(grafo.grafo, int(currentYear))
         except:
+            traceback.print_exc()
             print("Erro ao gerar o csv do grafo")
         yearchecked = True
+
+    print("Gerando o grafo com as comunidades")
+    partition = community_louvain.best_partition(grafo.grafo)
+    pos = grafo.community_layout(partition)
+    nx.draw(grafo.grafo, pos, node_color=list(partition.values()))
+    plt.savefig(os.getcwd() + '\\TrabalhoFinal\\Grafos\\grafoOscarComunidade.png')
 
     print("Gerando o csv com as métricas por ano")
     d.generateMetricas(grafo.metricasGrafo)
 
-    print("Gerando o grafo com as comunidades")
-    partition = community_louvain.best_partition(grafo)
-    pos = grafo.community_layout(partition)
-    nx.draw(grafo, pos, node_color=list(partition.values()))
-    plt.savefig(os.getcwd() + '\\TrabalhoFinal\\Grafos\\grafoOscarComunidade.png')
 
     winsound.PlaySound("SystemExit", winsound.SND_ALIAS)
 
